@@ -6,341 +6,578 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="CFO戰情室">
-    
     <title>CFO 戰情室</title>
-    
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.4.3/echarts.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
     <style>
-        /* 基礎背景設定，確保一定看得到顏色 */
-        :root {
-            --sat: env(safe-area-inset-top, 20px);
-            --sab: env(safe-area-inset-bottom, 20px);
-        }
-
-        html, body {
-            background-color: #0f172a; /* 深藍色背景 */
-            margin: 0;
-            padding: 0;
-            width: 100%;
-            min-height: 100%;
-            color: #f8fafc;
-            -webkit-text-size-adjust: 100%;
-        }
-
-        /* 內容容器：使用標準滾動防止 iPhone 內容消失 */
-        .app-wrapper {
-            padding-top: var(--sat);
-            padding-bottom: calc(var(--sab) + 20px);
-            padding-left: 16px;
-            padding-right: 16px;
-            box-sizing: border-box;
-        }
-
-        .glass-panel { 
-            background: rgba(30, 41, 59, 0.8); 
-            backdrop-filter: blur(10px); 
-            -webkit-backdrop-filter: blur(10px);
-            border: 1px solid rgba(255,255,255,0.1); 
-            border-radius: 20px;
-            margin-bottom: 16px;
-            padding: 16px;
-        }
-
-        /* 強制按鈕與輸入框樣式，防止 iOS 默認樣式干擾 */
-        button, input, select { 
-            -webkit-appearance: none;
-            appearance: none;
+        :root { --sat: env(safe-area-inset-top, 40px); --sab: env(safe-area-inset-bottom, 20px); }
+        body { background-color: #0f172a; color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; margin: 0; -webkit-text-size-adjust: 100%; }
+        .app-wrapper { padding: var(--sat) 16px calc(var(--sab) + 40px) 16px; max-width: 800px; margin: 0 auto; }
+        .glass-panel { background: rgba(30, 41, 59, 0.8); border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; padding: 16px; margin-bottom: 16px; }
+        
+        /* 修復 iOS 表單文字被遮擋或縮放的問題 */
+        input, select, textarea, button { 
             font-size: 16px !important; 
-            -webkit-tap-highlight-color: transparent;
+            -webkit-tap-highlight-color: transparent; 
+            outline: none; 
+        }
+        select {
+            appearance: none;
+            -webkit-appearance: none;
+            background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%2394a3b8%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.4-12.8z%22%2F%3E%3C%2Fsvg%3E");
+            background-repeat: no-repeat, repeat;
+            background-position: right .7em top 50%, 0 0;
+            background-size: .65em auto, 100%;
+            padding-right: 1.5em !important;
+            text-overflow: ellipsis;
         }
 
-        .btn-view {
-            flex: 1;
-            padding: 10px;
-            text-align: center;
-            font-size: 12px;
-            border-radius: 12px;
-            color: #94a3b8;
-        }
-
-        .btn-view.active {
-            background-color: #2563eb;
-            color: white;
-            font-weight: bold;
-        }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; height: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #475569; border-radius: 4px; }
+        .progress-bar-animated { transition: width 0.5s ease-in-out; }
+        input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); cursor: pointer; }
+        @keyframes flashUpdate { 0% { opacity: 0.5; transform: scale(0.95); } 100% { opacity: 1; transform: scale(1); } }
+        .value-updated { animation: flashUpdate 0.3s ease-out; }
     </style>
 </head>
 <body>
 
     <div class="app-wrapper">
-        <!-- 頂部標題 -->
+        <!-- 頂部標題與按鈕 -->
         <div class="flex justify-between items-center mb-6">
-            <h1 class="text-2xl font-bold text-white">戰情室</h1>
+            <h1 class="text-xl font-bold text-white flex items-center"><i class="fa-solid fa-chart-line text-green-400 mr-2"></i>戰情室</h1>
             <div class="flex gap-2">
-                <button onclick="openModal()" class="bg-slate-700 text-white px-4 py-2 rounded-xl text-xs font-bold border border-slate-500 shadow-lg">⚙️ 設定</button>
+                <button onclick="alert('系統自動結算中，請維持良好紀律！')" class="bg-yellow-500 text-gray-900 px-3 py-1.5 rounded-xl text-xs font-bold shadow-lg">成績</button>
+                <button onclick="openSettings()" class="bg-slate-700 text-white px-3 py-1.5 rounded-xl text-xs font-bold shadow-lg">設定</button>
             </div>
         </div>
 
-        <!-- 視圖切換 -->
-        <div class="bg-slate-800 rounded-2xl p-1 flex mb-6 border border-slate-700">
-            <div id="btnViewAll" onclick="setGlobalView('all')" class="btn-view active">全貌</div>
-            <div id="btnViewPersonal" onclick="setGlobalView('personal')" class="btn-view">個人</div>
-            <div id="btnViewFamily" onclick="setGlobalView('family')" class="btn-view">家庭</div>
+        <!-- 日期推演與視圖切換 -->
+        <div class="flex gap-2 mb-4 flex-col sm:flex-row">
+            <div class="bg-gray-800/80 p-2 rounded-xl border border-gray-700 flex items-center flex-1">
+                <span class="text-xs text-gray-400 mr-2"><i class="fa-regular fa-calendar text-blue-400"></i> 推演日:</span>
+                <input type="date" id="datePicker" class="bg-transparent text-white font-bold flex-1 text-sm" onchange="simulateToDate(this.value)">
+            </div>
+            <div class="bg-gray-800 rounded-xl p-1 flex border border-gray-700 flex-1">
+                <button onclick="setGlobalView('all')" id="btnViewAll" class="flex-1 py-1.5 rounded-lg text-xs font-bold bg-blue-600 text-white">全貌</button>
+                <button onclick="setGlobalView('personal')" id="btnViewPersonal" class="flex-1 py-1.5 rounded-lg text-xs text-gray-400">👤 個人</button>
+                <button onclick="setGlobalView('family')" id="btnViewFamily" class="flex-1 py-1.5 rounded-lg text-xs text-gray-400">🏠 家庭</button>
+            </div>
         </div>
 
         <!-- 數據看板 (2x2) -->
         <div class="grid grid-cols-2 gap-3 mb-6">
             <div class="glass-panel text-center !mb-0 border-b-4 border-blue-500">
-                <p class="text-[10px] text-slate-400 mb-1">可用資產</p>
-                <p id="display-cash" class="text-lg font-bold text-white">$0</p>
+                <p class="text-[10px] text-slate-400 mb-1">可用資產 (銀行/現金)</p>
+                <p id="display-cash" class="text-lg font-black text-white">$0</p>
             </div>
             <div class="glass-panel text-center !mb-0 border-b-4 border-red-500">
-                <p class="text-[10px] text-slate-400 mb-1">總負債</p>
-                <p id="display-total-debt" class="text-lg font-bold text-red-400">$0</p>
+                <p class="text-[10px] text-slate-400 mb-1">總負債 (卡數/貸款)</p>
+                <p id="display-total-debt" class="text-lg font-black text-red-400">$0</p>
             </div>
             <div class="glass-panel text-center !mb-0 border-b-4 border-green-500">
-                <p class="text-[10px] text-slate-400 mb-1">月淨流</p>
-                <p id="display-cashflow" class="text-lg font-bold text-green-400">$0</p>
+                <p class="text-[10px] text-slate-400 mb-1">本月淨現金流</p>
+                <p id="display-cashflow" class="text-lg font-black text-green-400">$0</p>
             </div>
-            <div class="glass-panel text-center !mb-0 border-b-4 border-gray-500">
-                <p class="text-[10px] text-slate-400 mb-1">淨值</p>
-                <p id="display-networth" class="text-lg font-bold text-slate-200">$0</p>
+            <div class="glass-panel text-center !mb-0 border-b-4 border-gray-400">
+                <p class="text-[10px] text-slate-400 mb-1">整體淨值</p>
+                <p id="display-networth" class="text-lg font-black text-slate-200">$0</p>
             </div>
         </div>
 
-        <!-- 帳戶紀錄 -->
+        <!-- 帳戶即時結餘 -->
         <div class="glass-panel">
-            <h3 class="text-sm font-bold text-slate-400 mb-3">帳戶即時結餘</h3>
-            <div id="accounts-display-container" class="grid grid-cols-2 gap-2"></div>
+            <h3 class="text-xs font-bold text-slate-400 mb-3"><i class="fa-solid fa-wallet text-teal-400 mr-2"></i>帳戶結餘</h3>
+            <div id="accounts-container" class="grid grid-cols-2 gap-2"></div>
         </div>
 
-        <!-- 快速記帳區 -->
+        <!-- 圖表分析 -->
+        <div class="space-y-4 mb-6">
+            <div class="glass-panel p-3">
+                <h2 class="text-xs font-bold text-white mb-2">本月收支動態</h2>
+                <div id="chartBar" style="width: 100%; height: 200px;"></div>
+            </div>
+            <div class="glass-panel p-3">
+                <h2 class="text-xs font-bold text-white mb-2">負債與貸款結構</h2>
+                <div id="chartDebtPie" style="width: 100%; height: 200px;"></div>
+                <div id="mom-comparison" class="mt-3 text-center text-[10px] font-bold p-2 rounded-xl bg-slate-900/50 text-slate-400">載入中...</div>
+            </div>
+        </div>
+
+        <!-- 快速記帳 -->
         <div class="glass-panel">
-            <h2 class="text-sm font-bold text-white mb-4">快速記帳</h2>
-            <div class="space-y-4">
+            <h2 class="text-sm font-bold text-white mb-4 flex justify-between items-center">
+                <span><i class="fa-solid fa-pen-nib text-blue-400 mr-2"></i>日常記帳</span>
+                <span id="invest-warning" class="hidden text-[10px] text-red-400 font-bold animate-pulse">⚠️ 投資防線超標</span>
+            </h2>
+            <div class="space-y-3 bg-slate-800/50 p-3 rounded-xl border border-slate-700 mb-6">
+                <!-- 【修復】：加入自訂日期 -->
                 <div class="flex gap-2">
-                    <select id="record-owner" class="bg-slate-700 text-white rounded-xl p-3 text-sm flex-1">
-                        <option value="personal">👤 個人</option>
-                        <option value="family">🏠 家庭</option>
-                    </select>
-                    <select id="record-type" class="bg-slate-700 text-white rounded-xl p-3 text-sm flex-1" onchange="toggleTransferFields()">
-                        <option value="expense">支出</option>
-                        <option value="income">收入</option>
-                        <option value="transfer">🔄 轉帳</option>
-                    </select>
+                    <input type="date" id="rec-date" class="bg-slate-700 text-white rounded-lg p-2 text-xs flex-1 border border-slate-600" title="記帳日期">
                 </div>
-
-                <div id="normal-fields" class="space-y-4">
-                    <select id="record-account" class="w-full bg-slate-700 text-white rounded-xl p-3 text-sm"></select>
+                <div class="flex gap-2">
+                    <select id="rec-owner" class="bg-slate-700 text-white rounded-lg p-2 text-xs flex-1"><option value="personal">👤 個人</option><option value="family">🏠 家庭</option></select>
+                    <select id="rec-type" class="bg-slate-700 text-white rounded-lg p-2 text-xs flex-1" onchange="toggleTransfer()"><option value="expense">支出</option><option value="income">收入</option><option value="transfer">🔄 轉帳/卡數</option></select>
+                </div>
+                <div id="normal-fields" class="space-y-3">
+                    <select id="rec-account" class="w-full bg-slate-700 text-white rounded-lg p-2 text-xs"></select>
                     <div class="flex gap-2">
-                        <select id="record-category" class="flex-1 bg-slate-700 text-white rounded-xl p-3 text-sm">
-                            <option value="🍔 飲食">🍔 飲食</option>
-                            <option value="🚆 車資">🚆 車資</option>
-                            <option value="🛍️ 購物">🛍️ 購物</option>
-                            <option value="🏠 雜項">🏠 雜項</option>
-                            <option value="📉 投資">📉 投資</option>
-                        </select>
-                        <input type="number" inputmode="decimal" id="record-amount" placeholder="金額" class="flex-1 bg-slate-900 text-white rounded-xl p-3 text-sm">
+                        <div class="flex flex-1 bg-slate-700 rounded-lg">
+                            <select id="rec-cat" class="flex-1 bg-transparent text-white p-2 text-xs outline-none w-full truncate"></select>
+                            <button onclick="quickAddCategory()" class="bg-slate-600 px-3 text-white text-xs rounded-r-lg font-bold border-l border-slate-500">➕</button>
+                        </div>
+                        <input type="number" inputmode="decimal" id="rec-amt" placeholder="金額" class="flex-1 bg-slate-900 text-white rounded-lg p-2 text-xs border border-slate-700">
                     </div>
                 </div>
-
-                <div id="transfer-fields" class="space-y-4 hidden">
+                <div id="transfer-fields" class="space-y-3 hidden">
                     <div class="flex gap-2">
-                        <select id="transfer-from" class="flex-1 bg-slate-700 text-white rounded-xl p-3 text-sm"></select>
-                        <select id="transfer-to" class="flex-1 bg-slate-700 text-white rounded-xl p-3 text-sm"></select>
+                        <select id="transfer-from" class="flex-1 bg-slate-700 text-white rounded-lg p-2 text-xs"></select>
+                        <select id="transfer-to" class="flex-1 bg-slate-700 text-white rounded-lg p-2 text-xs"></select>
                     </div>
-                    <input type="number" inputmode="decimal" id="transfer-amount" placeholder="轉帳金額" class="w-full bg-slate-900 text-white rounded-xl p-3 text-sm">
+                    <input type="number" inputmode="decimal" id="transfer-amt" placeholder="轉帳金額" class="w-full bg-slate-900 text-white rounded-lg p-2 text-xs border border-slate-700">
                 </div>
-
-                <input type="text" id="record-note" placeholder="備註" class="w-full bg-slate-900 text-white rounded-xl p-3 text-sm">
-                <button onclick="addRecord()" class="w-full bg-blue-600 py-4 rounded-2xl font-bold active:bg-blue-500 transition-colors">確認記帳</button>
+                <input type="text" id="rec-note" placeholder="備註 (可選)" class="w-full bg-slate-900 text-white rounded-lg p-2 text-xs border border-slate-700">
+                <button onclick="addRecord()" class="w-full bg-blue-600 py-3 rounded-xl font-bold shadow-lg active:scale-95 transition-transform text-white">寫入並更新結餘</button>
             </div>
+
+            <div class="flex justify-between items-center mb-3">
+                <span class="text-xs font-bold text-slate-400">近期紀錄</span>
+                <select id="rec-filter" class="bg-slate-800 text-[10px] text-gray-300 rounded px-1 py-1" onchange="renderRecords()">
+                    <option value="all">全部</option><option value="expense">支出</option><option value="income">收入</option>
+                </select>
+            </div>
+            <div id="records-list" class="space-y-2 max-h-60 overflow-y-auto custom-scrollbar"></div>
         </div>
 
-        <!-- 近期紀錄 -->
+        <!-- 預算與防禦機制 -->
         <div class="glass-panel">
-            <h2 class="text-sm font-bold text-slate-400 mb-3">近期紀錄</h2>
-            <div id="records-list" class="space-y-2"></div>
-        </div>
-    </div>
-
-    <!-- 設定視窗 (Modal) -->
-    <div id="settingsModal" class="fixed inset-0 z-[100] bg-slate-900 hidden flex flex-col pt-10">
-        <div class="p-6 flex justify-between items-center border-b border-slate-800">
-            <h2 class="font-bold text-white text-xl">設定</h2>
-            <button onclick="closeModal()" class="text-slate-400 text-2xl">&times;</button>
-        </div>
-        <div class="flex-1 overflow-y-auto p-6 space-y-6">
-            <div class="bg-slate-800 p-4 rounded-2xl border border-slate-700">
-                <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-teal-400 font-bold">帳戶管理</h3>
-                    <button onclick="addAccount()" class="text-xs bg-teal-500/20 text-teal-400 px-3 py-1 rounded-lg">+ 新增</button>
-                </div>
-                <div id="modal-accounts" class="space-y-3"></div>
+            <div class="flex justify-between items-end mb-2">
+                <h3 class="text-xs font-bold text-slate-400">預算控制台</h3>
+                <button onclick="document.getElementById('budgetModal').classList.remove('hidden')" class="text-[10px] bg-indigo-500/20 text-indigo-300 px-2 py-1 rounded">設定預算</button>
             </div>
-            <button onclick="confirmReset()" class="w-full py-4 text-red-500 text-xs border border-red-900/30 rounded-2xl">重置所有資料</button>
-        </div>
-        <div class="p-6">
-            <button onclick="closeModal()" class="w-full bg-blue-600 py-4 rounded-2xl font-bold text-white">儲存並關閉</button>
+            <div class="grid grid-cols-1 gap-3 mb-6" id="budget-meters"></div>
+
+            <h2 class="text-sm font-bold text-white mb-2"><i class="fa-solid fa-shield-halved text-purple-400 mr-2"></i>防禦連勝機制</h2>
+            <div class="bg-purple-900/20 p-3 rounded-xl border border-purple-500/30 flex justify-between items-center mb-3">
+                <div><p class="text-xs font-bold text-purple-300">本月投資防線</p><p class="text-[9px] text-purple-400/80">自動計算無投資天數</p></div>
+                <div class="text-right"><span id="defense-days" class="text-lg font-black text-purple-400">0</span><span class="text-[10px] text-purple-400/60 ml-1">天</span></div>
+            </div>
+            <div id="habits-list" class="space-y-2 mb-3"></div>
+            <div class="flex gap-2">
+                <input type="text" id="new-habit" placeholder="自訂追蹤 (如: 不看股票)" class="flex-1 bg-slate-900 text-white rounded-lg p-2 text-xs border border-slate-700">
+                <button onclick="addHabit()" class="bg-purple-600 px-3 rounded-lg text-xs text-white">新增</button>
+            </div>
         </div>
     </div>
 
+    <!-- 預算設定 Modal -->
+    <div id="budgetModal" class="fixed inset-0 z-[110] hidden flex items-center justify-center p-4 bg-black/80">
+        <div class="bg-slate-800 rounded-2xl w-full max-w-sm border border-slate-600 p-5 shadow-2xl">
+            <h3 class="text-sm font-bold text-white mb-4">預算設定 / 月</h3>
+            <div class="space-y-4 mb-6">
+                <div><label class="text-[10px] text-slate-400 mb-1 block">👤 個人預算上限</label><input type="number" id="set-budget-personal" class="w-full bg-slate-900 text-white p-3 rounded-lg text-sm border border-slate-700"></div>
+                <div><label class="text-[10px] text-slate-400 mb-1 block">🏠 家庭預算上限</label><input type="number" id="set-budget-family" class="w-full bg-slate-900 text-white p-3 rounded-lg text-sm border border-slate-700"></div>
+            </div>
+            <div class="flex gap-3">
+                <button onclick="document.getElementById('budgetModal').classList.add('hidden')" class="flex-1 bg-slate-700 py-3 rounded-xl text-sm text-white">取消</button>
+                <button onclick="saveBudgets()" class="flex-1 bg-indigo-600 py-3 rounded-xl text-sm text-white font-bold">儲存</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 系統設定 Modal -->
+    <div id="settingsModal" class="fixed inset-0 z-[100] bg-slate-900 hidden flex flex-col pt-[env(safe-area-inset-top)]">
+        <div class="p-5 flex justify-between items-center border-b border-slate-800">
+            <h2 class="font-bold text-white">系統參數設定</h2>
+            <button onclick="closeSettings()" class="text-slate-400 text-2xl">&times;</button>
+        </div>
+        <div class="flex-1 overflow-y-auto p-5 space-y-6 custom-scrollbar">
+            
+            <div class="flex gap-2">
+                <button onclick="exportJSON()" class="flex-1 bg-blue-600/30 text-blue-300 py-3 rounded-xl text-xs font-bold border border-blue-500/30"><i class="fa-solid fa-download"></i> 備份導出 (JSON)</button>
+                <button onclick="document.getElementById('file-upload').click()" class="flex-1 bg-purple-600/30 text-purple-300 py-3 rounded-xl text-xs font-bold border border-purple-500/30"><i class="fa-solid fa-upload"></i> 讀取備份</button>
+                <input type="file" id="file-upload" class="hidden" accept=".json" onchange="importJSON(event)">
+            </div>
+
+            <!-- 帳戶分類管理 -->
+            <div class="bg-slate-800 p-4 rounded-2xl border border-slate-700">
+                <div class="flex justify-between items-center mb-3"><h3 class="text-xs font-bold text-teal-400">實體帳戶與卡片</h3><button onclick="addParam('account')" class="text-[10px] bg-teal-500/20 text-teal-400 px-3 py-1.5 rounded-lg font-bold">+ 新增帳戶</button></div>
+                <div id="set-accs" class="space-y-3"></div>
+            </div>
+
+            <!-- 分期負債自動化模組 -->
+            <div class="bg-slate-800 p-4 rounded-2xl border border-slate-700">
+                <div class="flex justify-between items-center mb-3"><h3 class="text-xs font-bold text-orange-400">分期貸款自動扣款模組</h3><button onclick="addParam('debt')" class="text-[10px] bg-orange-500/20 text-orange-400 px-3 py-1.5 rounded-lg font-bold">+ 新增貸款</button></div>
+                <div id="set-debts" class="space-y-4"></div>
+            </div>
+
+            <!-- 分類管理 -->
+            <div class="bg-slate-800 p-4 rounded-2xl border border-slate-700">
+                <div class="flex justify-between items-center mb-3"><h3 class="text-xs font-bold text-blue-400">記帳類別</h3><button onclick="addCategoryFromSettings()" class="text-[10px] bg-blue-500/20 text-blue-400 px-3 py-1.5 rounded-lg font-bold">+ 新增</button></div>
+                <div id="set-cats" class="flex flex-wrap gap-2"></div>
+            </div>
+
+            <button onclick="if(confirm('確定清除所有數據？')) { localStorage.clear(); location.reload(); }" class="w-full py-4 text-red-500 text-xs font-bold border border-red-900/50 rounded-xl">重置所有資料 (清空為 0)</button>
+        </div>
+        <div class="p-5"><button onclick="closeSettings()" class="w-full bg-blue-600 py-4 rounded-2xl font-bold text-white shadow-lg">儲存並關閉</button></div>
+    </div>
+
+    <!-- ================== JavaScript 核心邏輯 ================== -->
     <script>
+        let chartBar, chartDebtPie;
         let appData = {};
+        
+        // 永久儲存金鑰，以後代碼更新不再更改此名稱！
+        const PERMANENT_STORAGE_KEY = 'CFO_PERMANENT_DB';
+
+        const emojiMap = {
+            "飲食": "🍔", "飯": "🍚", "車": "🚆", "交通": "🚗", "的士": "🚕",
+            "投資": "📉", "股票": "📊", "購物": "🛍️", "買": "🛒", "雜": "🏠", "水電": "💧",
+            "醫": "💊", "薪": "💰", "息": "📈", "卡": "💳", "旅行": "✈️", "玩": "🎮"
+        };
+        function getEmoji(name) { for (let k in emojiMap) { if (name.includes(k)) return emojiMap[k]; } return "🏷️"; }
+        function genId() { return 'id_' + Date.now() + Math.random().toString(36).substr(2,4); }
 
         const defaultData = {
-            "version": "4.0",
-            "accounts": [
-                {"id":"a1","name":"主要戶口","balance":0,"owner":"personal"},
-                {"id":"w1","name":"現金","balance":0,"owner":"personal"}
+            version: "10.0",
+            accounts: [
+                { id: "a1", name: "主要銀行", type: "bank", balance: 0, owner: "personal" },
+                { id: "c1", name: "信用卡", type: "credit", balance: 0, owner: "personal" }
             ],
-            "records": [],
-            "globalView": "all"
+            debts: [], records: [], habits: [],
+            budgets: { personal: 0, family: 0 }, history: { prevDebt: 0 },
+            categories: ["🍔 飲食", "🚆 車資", "🛍️ 購物", "🏠 雜項", "🧾 帳單", "📉 投資"],
+            globalView: "all",
+            savedDate: new Date().toISOString().split('T')[0]
         };
 
-        // 初始化
         window.onload = function() {
-            const saved = localStorage.getItem('cfo_v4');
-            if (saved) {
-                try {
-                    appData = JSON.parse(saved);
-                } catch(e) {
-                    appData = JSON.parse(JSON.stringify(defaultData));
+            // 【修復】：資料尋回與永久搬家程式
+            let saved = localStorage.getItem(PERMANENT_STORAGE_KEY);
+            if (!saved) {
+                // 如果找不到永久鎖匙，就去找你之前用過的舊版本鎖匙
+                saved = localStorage.getItem('cfo_v9') || localStorage.getItem('cfo_v8') || localStorage.getItem('cfo_v7') || localStorage.getItem('cfo_ios_v3');
+                if (saved) {
+                    localStorage.setItem(PERMANENT_STORAGE_KEY, saved); // 搬遷到永久資料庫
+                    console.log("資料已成功從舊版尋回並遷移！");
                 }
+            }
+
+            if (saved) { 
+                try { appData = JSON.parse(saved); } catch(e) { appData = JSON.parse(JSON.stringify(defaultData)); }
+                ['accounts','debts','records','habits','categories'].forEach(k => { if(!appData[k]) appData[k] = []; });
+                if(!appData.budgets) appData.budgets = { personal:0, family:0 };
+                if(!appData.history) appData.history = { prevDebt:0 };
             } else {
                 appData = JSON.parse(JSON.stringify(defaultData));
             }
-            updateUI();
+            
+            document.getElementById('datePicker').value = appData.savedDate;
+            document.getElementById('rec-date').value = new Date().toISOString().split('T')[0]; // 日常記帳預設為今天
+            
+            initCharts(); updateUI();
         };
 
-        function saveData() {
-            localStorage.setItem('cfo_v4', JSON.stringify(appData));
+        function saveData() { localStorage.setItem(PERMANENT_STORAGE_KEY, JSON.stringify(appData)); }
+
+        // --- 時間與自動扣款推演 ---
+        function simulateToDate(targetDateStr) {
+            let curr = new Date(appData.savedDate);
+            let target = new Date(targetDateStr);
+            if(target < curr) { alert("無法時光倒流！"); document.getElementById('datePicker').value = appData.savedDate; return; }
+            
+            appData.history.prevDebt = appData.accounts.filter(a=>a.type==='credit' && a.balance<0).reduce((s,a)=>s+Math.abs(a.balance),0) + appData.debts.reduce((s,d)=>s+d.balance,0);
+            
+            curr.setDate(curr.getDate() + 1);
+            while(curr <= target) {
+                const dom = curr.getDate();
+                const dStr = curr.toISOString().split('T')[0];
+                appData.debts.forEach(d => {
+                    if (d.months > 0 && d.emi > 0 && parseInt(d.deductDay) === dom && d.deductAccount) {
+                        d.balance = Math.max(0, d.balance - d.emi);
+                        d.months -= 1;
+                        const acc = appData.accounts.find(a => a.id === d.deductAccount);
+                        if(acc) {
+                            acc.balance -= d.emi;
+                            appData.records.unshift({ id: genId(), date: dStr, type: 'expense', amount: d.emi, owner: d.owner, category: '💳 貸款扣繳', note: `[自動] ${d.name} (剩${d.months}期)`, accountId: acc.id });
+                        }
+                    }
+                });
+                curr.setDate(curr.getDate() + 1);
+            }
+            appData.savedDate = targetDateStr;
+            saveData(); updateUI();
         }
 
+        // --- 核心計算 ---
         function updateUI() {
             const view = appData.globalView || 'all';
             const f = item => view === 'all' || item.owner === view;
             
-            // 計算數據
-            const filteredAccounts = appData.accounts.filter(f);
-            const liquid = filteredAccounts.reduce((s, a) => s + (a.balance > 0 ? a.balance : 0), 0);
-            const debt = filteredAccounts.reduce((s, a) => s + (a.balance < 0 ? Math.abs(a.balance) : 0), 0);
+            const liquid = appData.accounts.filter(f).filter(a => a.type === 'bank' || a.type === 'wallet').reduce((s,a) => s + a.balance, 0);
+            const creditDebt = appData.accounts.filter(f).filter(a => a.type === 'credit' && a.balance < 0).reduce((s,a) => s + Math.abs(a.balance), 0);
+            const termDebt = appData.debts.filter(f).reduce((s,d) => s + d.balance, 0);
+            const debt = creditDebt + termDebt;
+            
+            const curM = appData.savedDate.substring(0, 7);
+            const curRecs = appData.records.filter(f).filter(r => r.date.startsWith(curM));
+            const mInc = curRecs.filter(r => r.type === 'income').reduce((s,r)=>s+r.amount, 0);
+            const mExp = curRecs.filter(r => r.type === 'expense').reduce((s,r)=>s+r.amount, 0);
+            const cashflow = mInc - mExp;
+            
+            const invRecs = curRecs.filter(r => r.category && r.category.includes('投資'));
+            document.getElementById('invest-warning').classList.toggle('hidden', invRecs.length <= 3);
+            let defDays = "∞";
+            if (invRecs.length > 0) {
+                const lastInv = new Date(invRecs.sort((a,b)=>new Date(b.date)-new Date(a.date))[0].date);
+                defDays = Math.floor((new Date(appData.savedDate) - lastInv) / (1000 * 3600 * 24));
+            }
 
-            document.getElementById('display-cash').innerText = '$' + liquid.toLocaleString();
-            document.getElementById('display-total-debt').innerText = '$' + debt.toLocaleString();
-            document.getElementById('display-networth').innerText = '$' + (liquid - debt).toLocaleString();
+            const els = {
+                'display-cash': '$' + liquid.toLocaleString(),
+                'display-total-debt': '$' + debt.toLocaleString(),
+                'display-cashflow': (cashflow >= 0 ? '+$' : '-$') + Math.abs(cashflow).toLocaleString(),
+                'display-networth': '$' + (liquid - debt).toLocaleString(),
+                'defense-days': defDays
+            };
+            for (let id in els) {
+                const el = document.getElementById(id);
+                el.innerText = els[id];
+                el.classList.remove('value-updated'); void el.offsetWidth; el.classList.add('value-updated');
+            }
 
-            // 更新按鈕狀態
             ['all', 'personal', 'family'].forEach(v => {
-                const el = document.getElementById('btnView' + v.charAt(0).toUpperCase() + v.slice(1));
-                if (view === v) el.classList.add('active');
-                else el.classList.remove('active');
+                const btn = document.getElementById('btnView' + v.charAt(0).toUpperCase() + v.slice(1));
+                if(view === v) btn.className = "flex-1 py-1.5 rounded-lg text-xs font-bold bg-blue-600 text-white shadow-inner";
+                else btn.className = "flex-1 py-1.5 rounded-lg text-xs text-gray-400";
             });
 
-            // 渲染帳戶
-            const accCont = document.getElementById('accounts-display-container');
-            accCont.innerHTML = '';
-            filteredAccounts.forEach(a => {
-                accCont.innerHTML += `
-                    <div class="bg-slate-900/50 p-3 rounded-xl border border-slate-700">
-                        <p class="text-[9px] text-slate-500 truncate">${a.name}</p>
-                        <p class="text-xs font-bold ${a.balance < 0 ? 'text-red-400' : 'text-white'}">$${a.balance.toLocaleString()}</p>
-                    </div>`;
+            renderAccounts(); renderBudgets(); renderHabits(); renderRecords(); updateDropdowns();
+            
+            chartBar.setOption({
+                grid: { left: '10%', right: '10%', top: '20%', bottom: '15%' },
+                xAxis: { type: 'category', data: ['本月收入', '本月支出'], axisLabel: { color: '#fff', fontSize: 12, fontWeight: 'bold' } },
+                yAxis: { type: 'value', show: false },
+                series: [{ 
+                    type: 'bar', barWidth: '40%',
+                    data: [
+                        { value: mInc, itemStyle: { color: '#10b981', borderRadius: [6,6,0,0] } }, 
+                        { value: mExp, itemStyle: { color: '#ef4444', borderRadius: [6,6,0,0] } }
+                    ],
+                    label: { show: true, position: 'top', color: '#fff', formatter: '${c}', fontSize: 14, fontWeight: 'bold' }
+                }]
             });
 
-            // 渲染紀錄
-            const list = document.getElementById('records-list');
-            list.innerHTML = '';
-            appData.records.filter(r => view==='all' || r.owner===view).slice(0, 5).forEach(r => {
+            chartDebtPie.setOption({
+                series: [{ type: 'pie', radius: ['40%', '70%'], label: { show: false }, data: appData.debts.length > 0 ? appData.debts.map(d => ({ value: d.balance, name: d.name })) : [{ value: 0, name: '無分期負債' }] }]
+            });
+
+            const diff = (appData.history.prevDebt || debt) - debt;
+            const elMoM = document.getElementById('mom-comparison');
+            if(diff > 0) elMoM.innerHTML = `🎉 負債比上期 <span class="text-green-400">減少 $${diff.toLocaleString()}</span>`;
+            else if(diff < 0) elMoM.innerHTML = `⚠️ 負債比上期 <span class="text-red-400">增加 $${Math.abs(diff).toLocaleString()}</span>`;
+            else elMoM.innerHTML = `負債狀況無變動。`;
+        }
+
+        // --- 渲染區塊 ---
+        function renderAccounts() {
+            const cont = document.getElementById('accounts-container'); cont.innerHTML = '';
+            appData.accounts.filter(a => appData.globalView==='all' || a.owner===appData.globalView).forEach(a => {
+                const icon = a.type === 'credit' ? '💳' : a.type === 'wallet' ? '📱' : '🏦';
+                const ownerIcon = a.owner === 'family' ? '🏠' : '👤';
+                cont.innerHTML += `<div class="bg-slate-800/80 p-3 rounded-2xl border border-slate-700 shadow-sm value-updated">
+                    <p class="text-[10px] text-slate-400 truncate mb-1">${icon} ${a.name} ${ownerIcon}</p>
+                    <p class="text-sm font-bold ${a.balance < 0 ? 'text-red-400' : 'text-white'}">$${a.balance.toLocaleString()}</p>
+                </div>`;
+            });
+        }
+
+        function renderBudgets() {
+            const cont = document.getElementById('budget-meters'); cont.innerHTML = '';
+            const curM = appData.savedDate.substring(0, 7);
+            ['personal', 'family'].forEach(owner => {
+                if(appData.globalView !== 'all' && appData.globalView !== owner) return;
+                const limit = appData.budgets[owner] || 0; if(limit <= 0) return; 
+                const spent = appData.records.filter(r => r.type === 'expense' && r.date.startsWith(curM) && r.owner === owner).reduce((s, r) => s + r.amount, 0);
+                const pct = Math.min(100, Math.max(0, (spent / limit) * 100));
+                cont.innerHTML += `<div class="bg-slate-800/50 p-3 rounded-xl border border-slate-700">
+                    <div class="flex justify-between text-[10px] mb-2 font-bold"><span class="text-slate-300">${owner === 'personal' ? '👤 個人預算' : '🏠 家庭預算'}</span><span class="${(limit - spent) >= 0 ? 'text-green-400' : 'text-red-400'}">餘 $${(limit - spent).toLocaleString()}</span></div>
+                    <div class="w-full bg-slate-900 rounded-full h-2 overflow-hidden"><div class="${pct>90?'bg-red-500':pct>70?'bg-yellow-500':'bg-green-500'} h-full" style="width: ${pct}%"></div></div>
+                </div>`;
+            });
+        }
+
+        function renderHabits() {
+            const cont = document.getElementById('habits-list'); cont.innerHTML = '';
+            appData.habits.forEach(h => {
+                const isToday = h.lastCheck === appData.savedDate;
+                cont.innerHTML += `<div class="bg-slate-800/50 p-3 rounded-xl flex justify-between items-center border border-slate-700">
+                    <span class="text-xs font-bold text-white">${h.name}</span>
+                    <div class="flex items-center gap-3">
+                        <span class="text-xs font-black text-purple-400">${h.streak}🔥</span>
+                        <button onclick="checkHabit('${h.id}')" class="w-8 h-8 rounded-full ${isToday?'bg-purple-600 text-white':'bg-slate-700'} flex items-center justify-center"><i class="fa-solid fa-check"></i></button>
+                        <button onclick="removeHabit('${h.id}')" class="text-slate-600">&times;</button>
+                    </div>
+                </div>`;
+            });
+        }
+
+        function renderRecords() {
+            const cont = document.getElementById('records-list'); cont.innerHTML = '';
+            const filter = document.getElementById('rec-filter').value;
+            let recs = appData.records.filter(r => appData.globalView==='all' || r.owner===appData.globalView);
+            if (filter !== 'all') recs = recs.filter(r => r.type === filter);
+            recs.slice(0, 8).forEach((r, i) => {
                 const isExp = r.type === 'expense';
-                list.innerHTML += `
-                    <div class="bg-slate-900/50 p-3 rounded-xl flex justify-between items-center border-l-4 ${isExp?'border-red-500':'border-green-500'}">
-                        <div class="min-w-0 flex-1">
-                            <p class="text-xs font-bold text-white truncate">${r.category || '轉帳'}</p>
-                            <p class="text-[10px] text-gray-500">${r.note || ''}</p>
-                        </div>
-                        <p class="text-xs font-black ${isExp?'text-red-400':'text-green-400'} ml-3">$${r.amount.toLocaleString()}</p>
-                    </div>`;
+                cont.innerHTML += `<div class="bg-slate-800/40 p-3 rounded-xl border-l-4 ${isExp?'border-red-500':(r.type==='income'?'border-green-500':'border-blue-500')} flex justify-between items-center">
+                    <div class="min-w-0 flex-1"><p class="text-xs font-bold text-white">${r.category || '轉帳'}</p><p class="text-[9px] text-gray-500">${r.date} ${r.note?'· '+r.note:''}</p></div>
+                    <div class="flex items-center gap-3"><p class="text-xs font-black ${isExp?'text-red-400':(r.type==='income'?'text-green-400':'text-blue-400')}">$${r.amount.toLocaleString()}</p><button onclick="delRecord(${i})" class="text-slate-600 text-lg">&times;</button></div>
+                </div>`;
             });
+        }
 
-            updateDropdowns();
+        // --- 互動功能 ---
+        function quickAddCategory() {
+            const name = prompt("輸入新類別名稱 (例如：旅行)");
+            if(name) {
+                const newCat = getEmoji(name) + " " + name;
+                appData.categories.push(newCat);
+                saveData(); updateDropdowns();
+                document.getElementById('rec-cat').value = newCat;
+            }
+        }
+        function addCategoryFromSettings() {
+            const name = prompt("輸入新類別名稱");
+            if(name) { appData.categories.push(getEmoji(name) + " " + name); saveData(); renderSettings(); updateDropdowns(); }
+        }
+
+        function toggleTransfer() {
+            const isT = document.getElementById('rec-type').value === 'transfer';
+            document.getElementById('normal-fields').classList.toggle('hidden', isT);
+            document.getElementById('transfer-fields').classList.toggle('hidden', !isT);
         }
 
         function addRecord() {
-            const type = document.getElementById('record-type').value;
-            const amt = parseFloat(type === 'transfer' ? document.getElementById('transfer-amount').value : document.getElementById('record-amount').value);
+            const type = document.getElementById('rec-type').value;
+            const amt = parseFloat(type === 'transfer' ? document.getElementById('transfer-amt').value : document.getElementById('rec-amt').value);
             if (!amt || amt <= 0) return;
-
-            const newRec = {
-                id: Date.now().toString(),
-                type: type,
-                amount: amt,
-                owner: document.getElementById('record-owner').value,
-                category: document.getElementById('record-category').value,
-                note: document.getElementById('record-note').value
-            };
-
+            
+            const recDate = document.getElementById('rec-date').value || appData.savedDate;
+            const newRec = { id: genId(), date: recDate, type, owner: document.getElementById('rec-owner').value, amount: amt, note: document.getElementById('rec-note').value };
+            
             if (type === 'expense') {
-                const a = appData.accounts.find(x => x.id === document.getElementById('record-account').value);
+                const a = appData.accounts.find(x => x.id === document.getElementById('rec-account').value); 
                 if(a) a.balance -= amt;
+                newRec.category = document.getElementById('rec-cat').value; newRec.accountId = a?.id;
             } else if (type === 'income') {
-                const a = appData.accounts.find(x => x.id === document.getElementById('record-account').value);
+                const a = appData.accounts.find(x => x.id === document.getElementById('rec-account').value); 
                 if(a) a.balance += amt;
+                newRec.category = document.getElementById('rec-cat').value; newRec.accountId = a?.id;
             } else if (type === 'transfer') {
                 const f = appData.accounts.find(x => x.id === document.getElementById('transfer-from').value);
                 const t = appData.accounts.find(x => x.id === document.getElementById('transfer-to').value);
                 if(f && t) { f.balance -= amt; t.balance += amt; }
+                newRec.category = "🔄 轉帳/卡數";
             }
-
+            
             appData.records.unshift(newRec);
+            // 根據日期重新排序
+            appData.records.sort((a, b) => new Date(b.date) - new Date(a.date));
             saveData(); updateUI();
             
-            // 清空
-            document.getElementById('record-amount').value = '';
-            document.getElementById('transfer-amount').value = '';
-            document.getElementById('record-note').value = '';
+            document.getElementById('rec-amt').value = ''; document.getElementById('transfer-amt').value = ''; document.getElementById('rec-note').value = '';
         }
+        function delRecord(idx) { appData.records.splice(idx, 1); saveData(); updateUI(); }
 
+        function addHabit() { const txt = document.getElementById('new-habit').value; if(txt) { appData.habits.push({ id: genId(), name: txt, streak: 0, lastCheck: null }); document.getElementById('new-habit').value = ''; saveData(); updateUI(); } }
+        function checkHabit(id) { const h = appData.habits.find(x=>x.id===id); if(h && h.lastCheck !== appData.savedDate) { h.streak++; h.lastCheck = appData.savedDate; saveData(); updateUI(); } }
+        function removeHabit(id) { appData.habits = appData.habits.filter(x=>x.id!==id); saveData(); updateUI(); }
         function setGlobalView(v) { appData.globalView = v; saveData(); updateUI(); }
-        function toggleTransferFields() {
-            const isT = document.getElementById('record-type').value === 'transfer';
-            document.getElementById('normal-fields').classList.toggle('hidden', isT);
-            document.getElementById('transfer-fields').classList.toggle('hidden', !isT);
-        }
-        function openModal() { renderModalAccounts(); document.getElementById('settingsModal').classList.remove('hidden'); }
-        function closeModal() { document.getElementById('settingsModal').classList.add('hidden'); updateUI(); }
 
-        function renderModalAccounts() {
-            const cont = document.getElementById('modal-accounts');
-            cont.innerHTML = '';
-            appData.accounts.forEach((a, i) => {
-                cont.innerHTML += `
-                    <div class="flex gap-2 items-center bg-slate-900/50 p-2 rounded-xl">
-                        <input type="text" value="${a.name}" onchange="appData.accounts[${i}].name=this.value;saveData();" class="bg-transparent text-white text-xs flex-1 outline-none">
-                        <input type="number" value="${a.balance}" onchange="appData.accounts[${i}].balance=parseFloat(this.value)||0;saveData();" class="bg-slate-800 text-white text-xs w-20 p-2 rounded-lg">
-                        <button onclick="appData.accounts.splice(${i},1);saveData();renderModalAccounts();" class="text-red-500 px-2">&times;</button>
-                    </div>`;
+        // --- 設定模組 ---
+        function updateDropdowns() {
+            const accOpts = appData.accounts.map(a => {
+                const icon = a.type === 'credit' ? '💳' : a.type === 'wallet' ? '📱' : '🏦';
+                return `<option value="${a.id}">${icon} ${a.name}</option>`;
+            }).join('');
+            document.getElementById('rec-account').innerHTML = accOpts; 
+            document.getElementById('transfer-from').innerHTML = accOpts; 
+            document.getElementById('transfer-to').innerHTML = accOpts;
+            document.getElementById('rec-cat').innerHTML = appData.categories.map(c => `<option value="${c}">${c}</option>`).join('');
+        }
+
+        function saveBudgets() {
+            appData.budgets.personal = parseFloat(document.getElementById('set-budget-personal').value) || 0;
+            appData.budgets.family = parseFloat(document.getElementById('set-budget-family').value) || 0;
+            saveData(); updateUI(); document.getElementById('budgetModal').classList.add('hidden');
+        }
+
+        function openSettings() { renderSettings(); document.getElementById('settingsModal').classList.remove('hidden'); }
+        function closeSettings() { document.getElementById('settingsModal').classList.add('hidden'); updateUI(); }
+
+        function renderSettings() {
+            const cCats = document.getElementById('set-cats'); cCats.innerHTML = '';
+            appData.categories.forEach((c, i) => { cCats.innerHTML += `<div class="bg-slate-900 border border-slate-700 px-3 py-1.5 rounded-full text-xs text-white flex items-center gap-2">${c} <button onclick="appData.categories.splice(${i},1);renderSettings();saveData();updateDropdowns();" class="text-red-500">&times;</button></div>`; });
+            
+            const accCont = document.getElementById('set-accs'); accCont.innerHTML = '';
+            appData.accounts.forEach((item, i) => {
+                accCont.innerHTML += `<div class="flex gap-2 items-center bg-slate-900/50 p-2 rounded-xl text-xs flex-wrap">
+                    <select onchange="appData.accounts[${i}].owner=this.value;saveData();updateUI();" class="bg-slate-800 text-white p-2 rounded-lg outline-none"><option value="personal" ${item.owner==='personal'?'selected':''}>👤</option><option value="family" ${item.owner==='family'?'selected':''}>🏠</option></select>
+                    <select onchange="appData.accounts[${i}].type=this.value;saveData();updateUI();" class="bg-slate-800 text-white p-2 rounded-lg outline-none"><option value="bank" ${item.type==='bank'?'selected':''}>🏦 銀行</option><option value="credit" ${item.type==='credit'?'selected':''}>💳 信用卡</option><option value="wallet" ${item.type==='wallet'?'selected':''}>📱 電子</option></select>
+                    <input type="text" value="${item.name}" onchange="appData.accounts[${i}].name=this.value;saveData();updateDropdowns();" class="bg-transparent text-white flex-1 min-w-[80px] border-b border-slate-700 pb-1">
+                    <input type="number" placeholder="餘額" value="${item.balance}" onchange="appData.accounts[${i}].balance=parseFloat(this.value)||0;saveData();updateUI();" class="bg-slate-800 text-white w-20 p-2 rounded-lg text-right">
+                    <button onclick="appData.accounts.splice(${i},1);renderSettings();saveData();updateUI();" class="text-red-500 px-2 text-lg">&times;</button>
+                </div>`;
+            });
+
+            const debtCont = document.getElementById('set-debts'); debtCont.innerHTML = '';
+            appData.debts.forEach((item, i) => {
+                debtCont.innerHTML += `<div class="bg-slate-900/50 p-3 rounded-xl text-xs border border-slate-700 mb-2">
+                    <div class="flex gap-2 items-center mb-2">
+                        <select onchange="appData.debts[${i}].owner=this.value;saveData();updateUI();" class="bg-slate-800 text-white p-1 rounded outline-none"><option value="personal" ${item.owner==='personal'?'selected':''}>👤</option><option value="family" ${item.owner==='family'?'selected':''}>🏠</option></select>
+                        <input type="text" placeholder="貸款名稱" value="${item.name}" onchange="appData.debts[${i}].name=this.value;saveData();" class="bg-transparent text-white flex-1 font-bold">
+                        <button onclick="appData.debts.splice(${i},1);renderSettings();saveData();updateUI();" class="text-red-500">&times;</button>
+                    </div>
+                    <div class="grid grid-cols-3 gap-2 mb-2">
+                        <div><label class="text-[9px] text-slate-500">總餘額</label><input type="number" value="${item.balance}" onchange="appData.debts[${i}].balance=parseFloat(this.value)||0;saveData();updateUI();" class="bg-slate-800 text-white w-full p-1.5 rounded"></div>
+                        <div><label class="text-[9px] text-slate-500">每月供款</label><input type="number" value="${item.emi}" onchange="appData.debts[${i}].emi=parseFloat(this.value)||0;saveData();" class="bg-slate-800 text-white w-full p-1.5 rounded"></div>
+                        <div><label class="text-[9px] text-slate-500">剩餘期數</label><input type="number" value="${item.months}" onchange="appData.debts[${i}].months=parseInt(this.value)||0;saveData();" class="bg-slate-800 text-white w-full p-1.5 rounded"></div>
+                    </div>
+                    <div class="flex gap-2 items-end">
+                        <div class="flex-1"><label class="text-[9px] text-slate-500">自動扣款戶口</label><select onchange="appData.debts[${i}].deductAccount=this.value;saveData();" class="bg-slate-800 text-white w-full p-1.5 rounded"><option value="">(手動)</option>${appData.accounts.map(a=>`<option value="${a.id}" ${item.deductAccount===a.id?'selected':''}>${a.name}</option>`).join('')}</select></div>
+                        <div class="w-16"><label class="text-[9px] text-slate-500">扣款日</label><input type="number" placeholder="1-31" value="${item.deductDay||''}" onchange="appData.debts[${i}].deductDay=this.value;saveData();" class="bg-slate-800 text-white w-full p-1.5 rounded"></div>
+                    </div>
+                </div>`;
             });
         }
 
-        function addAccount() {
-            appData.accounts.push({ id: Date.now().toString(), name: "新帳戶", balance: 0, owner: "personal" });
-            renderModalAccounts(); saveData();
+        function addParam(type) {
+            const id = genId();
+            if(type==='account') appData.accounts.push({ id, name: "新帳戶", type: "bank", balance: 0, owner: "personal" });
+            if(type==='debt') appData.debts.push({ id, name: "新貸款", balance: 0, emi: 0, months: 0, deductDay: '', deductAccount: '', owner: "personal" });
+            renderSettings(); saveData(); updateDropdowns(); updateUI();
         }
 
-        function updateDropdowns() {
-            const opts = appData.accounts.map(a => `<option value="${a.id}">${a.name}</option>`).join('');
-            document.getElementById('record-account').innerHTML = opts;
-            document.getElementById('transfer-from').innerHTML = opts;
-            document.getElementById('transfer-to').innerHTML = opts;
+        // --- JSON 備份功能 ---
+        function exportJSON() {
+            const blob = new Blob([JSON.stringify(appData)], {type: 'application/json'});
+            const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `CFO_Backup_${appData.savedDate}.json`; a.click();
+        }
+        function importJSON(e) {
+            const f = e.target.files[0]; if(!f) return; const r = new FileReader();
+            r.onload = function(evt) { 
+                try { 
+                    appData = JSON.parse(evt.target.result); 
+                    saveData(); 
+                    alert("備份讀取成功！即將重新載入。");
+                    location.reload(); 
+                } catch(err) { alert("讀取失敗，請確認檔案格式是否正確。"); } 
+            }; 
+            r.readAsText(f);
         }
 
-        function confirmReset() {
-            if(confirm("確定刪除所有資料？")) { localStorage.clear(); location.reload(); }
-        }
+        function initCharts() { chartBar = echarts.init(document.getElementById('chartBar')); chartDebtPie = echarts.init(document.getElementById('chartDebtPie')); }
     </script>
 </body>
 </html>
